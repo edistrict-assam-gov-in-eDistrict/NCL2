@@ -1,0 +1,866 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Official Certificate - Fixed</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+      body {
+        background: #777;
+        margin: 0;
+        padding: 20px;
+        font-family: "Times New Roman", Times, serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .no-print {
+        background: #fff;
+        padding: 10px;
+        margin-bottom: 20px;
+        width: 210mm;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        border-radius: 4px;
+      }
+      #certificate {
+        width: 210mm;
+        height: 297mm;
+        max-height: 297mm;
+        background: white;
+        padding: 6mm 8mm;
+        box-sizing: border-box;
+        position: relative;
+        color: #000;
+        border: 2px solid #000;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .header-wrap {
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #000;
+        padding-bottom: 6px;
+        margin-bottom: 8px;
+      }
+      .header-left,
+      .header-right {
+        width: 85px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .header-content {
+        flex-grow: 1;
+        text-align: center;
+      }
+      .header-content p {
+        margin: 0;
+        font-size: 13px;
+        /* font-weight: bold; */
+      }
+      .header-content h2 {
+        margin: 1px 0;
+        font-size: 17px;
+        letter-spacing: 0.3px;
+      }
+      .round-logo {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        border: 1px solid #000;
+        object-fit: cover;
+      }
+
+      .meta-container {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        font-size: 13.2px;
+      }
+      /* Barcode fix for PDF */
+      .barcode-box {
+        margin-top: 5px;
+        width: 160px;
+      }
+      .barcode-svg {
+        width: 160px;
+        height: 35px;
+        border: 0.5px solid #000;
+      }
+      .barcode-img {
+        width: 120px; /* barcode ki width */
+        height: 30px; /* barcode ki height */
+        display: block;
+        margin-top: 2px;
+      }
+
+      .barcode-number {
+        display: block;
+        width: 160px; /* SAME as barcode */
+        text-align: left;
+        letter-spacing: 1.5px;
+        /* text: bold; */
+        font-size: 12.5px;
+        /* letter-spacing: 2px; */
+        margin-top: 2px;
+      }
+
+      .app-side {
+        text-align: right;
+        line-height: 1.3;
+        font-size: 13.5px;
+      }
+      .app-side div {
+        margin-bottom: 5px;
+      }
+
+      .title-block {
+        text-align: center;
+        margin: 6px 0 6px;
+      }
+      .title-block h1 {
+        font-size: 12.5px;
+        /* font-weight: bold; */
+        text-transform: uppercase;
+        line-height: 1.35;
+        margin: 0;
+      }
+
+      .middle-section {
+        font-size: 13.2px;
+        line-height: 1.6;
+        margin-top: 4px;
+      }
+      .row {
+        display: flex;
+        align-items: baseline;
+        margin-bottom: 6px;
+      }
+      .editable {
+        outline: none;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: text;
+        padding: 0 3px;
+      }
+      .eng-para {
+        margin-top: 12px;
+        text-align: justify;
+        line-height: 1.45;
+        font-size: 10.5px;
+      }
+
+      /* Pure footer area ko manage karne ke liye */
+      .footer-wrap {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        font-family: Arial, sans-serif;
+        padding: 4px 10px 2px;
+        width: 100%;
+        gap: 10px;
+      }
+      .footer-block {
+        position: static;
+        margin-top: auto;
+      }
+
+      #qr-box {
+        width: 120px;
+        height: 120px;
+        background-color: #ffffff;
+        position: relative;
+        overflow: hidden;
+      }
+      .qr-cross {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .qr-cross::before,
+      .qr-cross::after {
+        content: "";
+        position: absolute;
+        background: #000;
+      }
+      .qr-cross::before {
+        width: 100%;
+        height: 3px;
+        top: 50%;
+        left: 0;
+        margin-top: -1.5px;
+      }
+      .qr-cross::after {
+        width: 3px;
+        height: 100%;
+        top: 0;
+        left: 50%;
+        margin-left: -1.5px;
+      }
+
+      .sig-section {
+        text-align: left;
+      }
+
+      .sig-auth-title {
+        font-size: 11px;
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .sig-container {
+        display: flex;
+        align-items: flex-start;
+      }
+
+      .sig-valid-text {
+        font-size: 10.5px;
+        display: block;
+      }
+
+      .sig-details {
+        font-size: 7px;
+        line-height: 1.15;
+      }
+
+      .green-tick {
+        height: 42px;
+        margin-left: -5px; /* Tick ko details ke sath overlap karne ke liye */
+        margin-top: 3px;
+      }
+
+      .notes-area {
+        margin-top: 4px;
+        /* Line removed as requested */
+        padding-top: 0;
+      }
+      .csc-footer {
+        position: static;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        font-size: 7.6px;
+        font-style: italic;
+        margin-top: 1px;
+      }
+
+      @media print {
+        .no-print {
+          display: none;
+        }
+        body {
+          background: #fff;
+          padding: 0;
+        }
+      }
+      @page {
+        size: A4;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="no-print">
+      <button
+        onclick="savePDF()"
+        style="
+          padding: 10px 20px;
+          background: #000;
+          color: #fff;
+          border: none;
+          cursor: pointer;
+          font-weight: bold;
+        "
+      >
+        DOWNLOAD FINAL PDF
+      </button>
+    </div>
+
+    <div id="certificate">
+      <div class="header-wrap">
+        <div class="header-left">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/800px-Emblem_of_India.svg.png"
+            style="width: 62px"
+            crossorigin="anonymous"
+          />
+        </div>
+        <div class="header-content">
+          <p>অসম চৰকাৰ</p>
+          <h2>GOVERNMENT OF ASSAM</h2>
+          <p>জিলা আয়ুক্তৰ কাৰ্যালয়</p>
+
+          <p>OFFICE OF THE DISTRICT COMMISSIONER</p>
+          <br />
+          <br />
+          <p>
+            <span class="editable" data-field="district" contenteditable="true"
+              >TINSUKIA DISTRICT</span
+            >
+          </p>
+
+          <p>(Assam e-District Project)</p>
+        </div>
+        <div class="header-right">
+          <img src="logo.png" alt="Xohari" class="round-logo" />
+        </div>
+      </div>
+
+      <div class="meta-container">
+        <div class="barcode-side">
+          প্রমাণ পত্র নং<br />
+          Certificate No. :
+          <span class="editable" id="certNo" contenteditable="true"
+            >19122025-001-15740973</span
+          ><br /><br />
+
+          <div class="barcode-box">
+            <svg id="barcodeSvg" class="barcode-svg"></svg>
+          </div>
+
+          <span
+            class="editable barcode-number"
+            id="certNoBarcode"
+            contenteditable="true"
+          >
+            1912202500115740973
+          </span>
+        </div>
+        <div class="app-side">
+          <div>আবেদন নং</div>
+          <div>
+            Application No. :
+            <span class="editable" id="appNo" contenteditable="true">
+              SSDG/ED/NCL/109474427
+            </span>
+          </div>
+          <div>
+            তাৰিখ / Date:
+            <span class="editable" id="issueDate" contenteditable="true"
+              >19-12-2025</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="title-block">
+        <h1>
+          FORM OF CERTIFICATE TO BE PRODUCED BY OTHER BACKWARD CLASSES APPLYING
+          FOR ADMISSION TO CENTRAL EDUCATIONAL INSTITUTIONS (CEIs) / APPOINTMENT
+          TO POST, UNDER THE GOVERNMENT OF INDIA
+        </h1>
+      </div>
+
+      <div class="middle-section">
+        <div class="row" style="margin-bottom: 10px">
+          <span>ইয়াৰ দ্বাৰা প্রমাণিত কৰা হ'ল যে</span>
+          <div style="flex-grow: 1; text-align: center">
+            <span
+              class="editable"
+              id="personName"
+              data-field="name"
+              contenteditable="true"
+              >KAMAL NATH</span
+            >
+          </div>
+          <span>পিতা / মাতা</span>
+        </div>
+
+        <div class="row">
+          <div style="width: 240px; text-align: center">
+            <span
+              class="editable"
+              id="fatherName"
+              data-field="father"
+              contenteditable="true"
+              >JIBAN NATH</span
+            >
+          </div>
+          <span>গাঁও / নগৰ</span>
+          <div style="flex-grow: 1; text-align: center">
+            <span
+              class="editable"
+              id="village"
+              data-field="village"
+              contenteditable="true"
+              >NALANIHULA GAON</span
+            >
+          </div>
+        </div>
+
+        <div class="row" style="justify-content: space-between">
+          <div>
+            জিলা / মহকুমা
+            <span
+              class="editable"
+              id="district"
+              data-field="district"
+              contenteditable="true"
+              >TINSUKIA</span
+            >
+          </div>
+          <!-- <div>
+            রাo্য :
+            <span
+              class="editable"
+              id="state"
+              data-field="state"
+              contenteditable="true"
+              >ASSAM</span
+            >
+          </div> -->
+          <div>
+            &nbsp;&nbsp;অসমৰ&nbsp;&nbsp;
+            <span
+              class="editable"
+              id="community"
+              data-field="community"
+              contenteditable="true"
+              >OBC,&nbsp;&nbsp;YOGI</span
+            >
+          </div>
+        </div>
+        <!-- <br /> -->
+        <!-- <br /> -->
+        <p>
+          জাতিৰ, যি নিম্নলিখিত সমূহৰ দ্বাৰা অসমৰ পিচপৰা শ্ৰেণী হিচাবে স্বীকৃত।
+        </p>
+
+        <div class="eng-para" style="margin-top: 10px">
+          This is to certify that
+          <b
+            ><span class="editable" data-field="name" contenteditable="true"
+              >KAMAL NATH</span
+            ></b
+          >
+          Son/Daughter of
+          <b
+            ><span class="editable" data-field="father" contenteditable="true"
+              >JIBAN NATH</span
+            ></b
+          >
+          of Village/Town
+          <b
+            ><span class="editable" data-field="village" contenteditable="true"
+              >NALANIHULA GAON</span
+            ></b
+          >
+          District/Division
+          <b
+            ><span class="editable" data-field="district" contenteditable="true"
+              >TINSUKIA</span
+            ></b
+          >
+          in the
+          <b
+            ><span class="editable" data-field="state" contenteditable="true"
+              >ASSAM</span
+            ></b
+          >
+          State belongs to the
+          <b
+            ><span
+              class="editable"
+              data-field="community"
+              contenteditable="true"
+              >OBC, YOGI</span
+            ></b
+          >
+          Community which is recognized as a backward class under:
+        </div>
+        <br />
+
+        <div class="obc-list" style="font-size: 10.5px; line-height: 1.35">
+          <b>(i)</b> Resolution No. 12011/68/93-BCC dated 10/09/93 published in
+          the Gazette of India Extraordinary Part I Section I No. 186 dated
+          13/09/93 <b>(ii)</b> Resolution No. 12011/94-BCC dated 19/10/94
+          published in the Gazette of India Extraordinary Part I Section I No.
+          163 dated 20/10/94 <b>(iii)</b> Resolution No. 12011/95-BCC dated
+          24/05/95 published in the Gazette of India Extraordinary Part I
+          Section I No. 88 dated 25/05/95 <b>(iv)</b> Resolution No.
+          12011/96-BCC dated 09/03/96 published in the Gazette of India
+          Extraordinary Part I Section I No. 210 dated 11/12/96
+          <b>(v)</b> Resolution No. 12011/97-BCC dated 03/12/97 published in the
+          Gazette of India Extraordinary Part I Section I No. 270 dated 06/12/97
+          <b>(vi)</b> Resolution No. 12011/98-BCC dated 02/12/99 published in
+          the Gazette of India Extraordinary Part I Section I No. 71 dated
+          04/01/2000 <b>(vii)</b> Resolution No. 12011/99-BCC dated 21/09/2000
+          published in the Gazette of India Extraordinary Part I Section I No.
+          210 dated 21/09/2000 <b>(viii)</b> Resolution No. 12011/2000-BCC dated
+          06/09/2001 published in the Gazette of India Extraordinary Part I
+          Section I No. 210 dated 21/09/2001 <b>(ix)</b> Resolution No.
+          12011/2001-BCC dated 16/09/2003 published in the Gazette of India
+          Extraordinary Part I Section I No. 67 dated 12/03/2007
+          <b>(x)</b> Resolution No. 12011/2002-BCC dated 13/01/2004
+          <b>(xi)</b> Resolution No. 12011/2004-BCC dated 16/01/2006 published
+          in the Gazette of India Extraordinary Part I Section I No. 67 dated
+          12/03/2007 <b>(xii)</b> Resolution No. 12015/2/2007-BCC dated
+          18/08/2010 <b>(xiii)</b> Resolution No. 12015/13/2010-BCC dated
+          08/12/2011.
+        </div>
+        <div style="margin-top: 8px; font-size: 11.5px; line-height: 1.4">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+            "
+          >
+            <span class="editable" data-field="name" contenteditable="true"
+              >KAMAL NATH</span
+            >
+            <span
+              class="editable"
+              data-field="assamFamily"
+              contenteditable="true"
+              >আৰু / বা পৰিয়াল অসমৰ</span
+            >
+            <span class="editable" data-field="district" contenteditable="true"
+              >TINSUKIA</span
+            >
+          </div>
+          <!-- <br /> -->
+          জিলা / মহকুমাত সাধাৰণ ভাবে বসবাস কৰে<br />
+          ইয়াৰ দ্বাৰা ইয়াকো প্রমাণ কৰা হ'ল যে তেখেত ভাৰত চৰকাৰৰ Department of
+          Personel and Training OM নং 36012/22/93 Estt. (SCT) দিনাংক 08/09/93 যি
+          OM নং 36033/3/2004 Estt. (Res.) দিনাংক 09/03/2004 আৰু যি পুনঃ OM নং
+          36033/3/2004 Estt. (Res.) দিনাংক 14/10/2008 বা ভাৰত চৰকাৰৰ শেহতীয়া
+          অধীসূচনাৰ দ্বাৰা পৰিবৰ্তিত স্তম্ভ ও ত উল্লেখিত ব্যক্তি /অনুবিভাগ
+          ক্ৰীমিলেয়াৰৰ (Creamy layer) অন্তর্ভূক্ত নহয়।
+        </div>
+        <div class="eng-para" style="margin-top: 12px; font-size: 13px">
+          <b
+            ><span class="editable" data-field="name" contenteditable="true"
+              >KAMAL NATH</span
+            ></b
+          >
+          and/or his family ordinarily reside(s) in the
+          <b
+            ><span class="editable" data-field="district" contenteditable="true"
+              >TINSUKIA</span
+            ></b
+          >
+          District/Division of Assam State. This is also to certify that he/she
+          does not belong to the person(s)/sections (Creamy Layer) mentioned in
+          Column 3 of the Schedule to the Government of India, Department of
+          Personnel and Training O.M. No. 36012/22/93-Estt.(SCT) dated 08/09/93
+          which is modified vide O.M. No. 36033/3/2004-Estt.(Res.) dated
+          09/03/2004 and further modified vide O.M. No. 36033/3/2004-Estt.(Res.)
+          dated 14/10/2008 or the latest notification of the Government of
+          India.
+        </div>
+      </div>
+      <div class="footer-block">
+        <div class="footer-wrap">
+          <div style="display: flex; align-items: flex-start; gap: 10px">
+            <div id="qr-box"></div>
+            <div style="font-size: 10px; line-height: 1.2; margin-top: -2px">
+              This certificate is valid for one year from the date of issue.
+            </div>
+          </div>
+
+          <div class="sig-section">
+            <span class="sig-auth-title">Signature of Approving</span>
+
+            <div class="sig-container">
+              <div class="text-side">
+                <span class="sig-valid-text">Signature valid</span>
+                <div class="sig-details">
+                  Digitally Signed.<br />
+                  Name:
+                  <span class="editable" contenteditable="true"
+                    >MADHURIMA DHING</span
+                  ><br />
+                  Date:
+                  <span class="editable" contenteditable="true"
+                    >19-Dec-2025 11:34:42</span
+                  ><br />
+                  Reason: eDistrict<br />
+                  Location: Assam
+                </div>
+              </div>
+              <img src="GreenTick.png" class="green-tick" alt="Valid" />
+            </div>
+          </div>
+        </div>
+
+        <div class="notes-area" style="margin-top: 10px">
+          <span
+            style="
+              font-weight: bold;
+              text-decoration: underline;
+              font-size: 11px;
+            "
+            >NOTE :</span
+          >
+          <div style="font-size: 7px; line-height: 1.02; margin-top: 2px">
+            <b>a.</b> The term 'Ordinarily' used here will have the same meaning
+            as in Section 20 of the Representation of the People Act, 1950.
+            <b>b.</b> The authorities competent to issue Caste Certificates are
+            indicated below: <b>i.</b> District Magistrate / Additional
+            Magistrate / Collector / Deputy Commissioner / Additional Deputy
+            Commissioner / Deputy Collector / 1st Class Stipendiary Magistrate /
+            Sub-Divisional Magistrate / Taluka Magistrate / Executive Magistrate
+            / Extra Assistant Commissioner (not below the rank of 1st Class
+            Stipendiary Magistrate). <b>ii.</b> Chief Presidency Magistrate /
+            Additional Chief Presidency Magistrate / Presidency Magistrate.
+            <b>iii.</b> Revenue Officer not below the rank of Tehsildar and in
+            Sub-Divisional Officer of the area where the candidate and / or his
+            family resides.
+          </div>
+          <ol
+            style="
+              font-size: 6.2px;
+              font-style: italic;
+              line-height: 1.02;
+              margin: 1px 0 0 10px;
+              padding: 0;
+            "
+          >
+            <li>
+              This certificate is digitally signed and therefore needs no
+              physical signature.
+            </li>
+            <li>
+              Authenticity of this certificate can be verified from
+              http://www.assam.gov.in/certificate-verification.
+            </li>
+            <li>
+              This certificate is legally valid as per the Information
+              Technology Act 2000 and its subsequent amendments.
+            </li>
+            <li>Tampering of this certificate will attract penal action.</li>
+          </ol>
+          <div class="csc-footer" style="margin-top: 1px">
+            <div>
+              CSC Name :
+              <span
+                class="editable"
+                id="cscName"
+                data-field="cscName"
+                contenteditable="true"
+                >Tinsukia,SRIPURIA TINGRAI</span
+              >
+            </div>
+            <div>
+              CSC ID :
+              <span
+                class="editable"
+                id="cscId"
+                data-field="cscId"
+                contenteditable="true"
+                >AS247123630012</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      function getText(id) {
+        const el = document.getElementById(id);
+        return el ? el.innerText.trim() : "";
+      }
+
+      function collectData() {
+        return {
+          certNo: getText("certNo"),
+          appNo: getText("appNo"),
+          date: getText("issueDate"),
+          name: getText("personName"),
+          father: getText("fatherName"),
+          village: getText("village"),
+          district: getText("district"),
+          state: getText("state"),
+          community: getText("community"),
+          assamFamily: document.querySelector('[data-field="assamFamily"]')
+            ? document
+                .querySelector('[data-field="assamFamily"]')
+                .innerText.trim()
+            : "",
+          cscName: getText("cscName"),
+          cscId: getText("cscId"),
+        };
+      }
+
+      function buildVerifyUrl(data) {
+        const baseUrl =
+          "https://edistrict-assam-gov-in-edistrict.github.io/NCL2/varify.html";
+        const url = new URL(baseUrl);
+        const keyMap = {
+          certNo: "cn",
+          appNo: "an",
+          date: "dt",
+          name: "nm",
+          father: "fn",
+          district: "ds",
+          village: "vg",
+          state: "st",
+          community: "cm",
+          assamFamily: "af",
+          cscName: "cnm",
+          cscId: "cid",
+        };
+        const compactKeys = [
+          "certNo",
+          "appNo",
+          "date",
+          "name",
+          "father",
+          "village",
+          "district",
+          "state",
+          "community",
+          "cscName",
+          "cscId",
+        ];
+        if (data) {
+          compactKeys.forEach((key) => {
+            const val = data[key];
+            if (val) url.searchParams.set(keyMap[key], val);
+          });
+        }
+        if (window.__appId) {
+          url.searchParams.set("appId", window.__appId);
+        }
+        return url.toString();
+      }
+
+      function generateQR() {
+        const data = collectData();
+        const verifyURL = buildVerifyUrl(data);
+
+        const qrContainer = document.getElementById("qr-box");
+        qrContainer.innerHTML = "";
+
+        new QRCode(qrContainer, {
+          text: verifyURL,
+          width: 120,
+          height: 120,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.L,
+        });
+      }
+
+      function syncFieldsFrom(el) {
+        const key = el.getAttribute("data-field");
+        if (key) {
+          const val = el.innerText;
+          document.querySelectorAll(`[data-field="${key}"]`).forEach((node) => {
+            if (node !== el) node.innerText = val;
+          });
+        }
+
+        if (el.id === "certNo") {
+          const digits = el.innerText.replace(/[^0-9]/g, "");
+          const barcodeEl = document.getElementById("certNoBarcode");
+          if (barcodeEl) barcodeEl.innerText = digits || el.innerText.trim();
+          renderBarcode(digits || el.innerText.trim());
+        }
+      }
+
+      function renderBarcode(value) {
+        const svg = document.getElementById("barcodeSvg");
+        if (!svg || !value || typeof JsBarcode === "undefined") return;
+        JsBarcode(svg, value, {
+          format: "CODE128",
+          displayValue: false,
+          height: 30,
+          width: 1.0,
+          margin: 0,
+        });
+      }
+
+      document.addEventListener("input", (e) => {
+        const el = e.target;
+        if (el && el.classList && el.classList.contains("editable")) {
+          syncFieldsFrom(el);
+        }
+      });
+
+      // Jab aap PDF button dabayengi, pehle QR update hoga phir download
+      async function savePDF() {
+        const data = collectData();
+
+        try {
+          const res = await fetch("../api/save.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+          const out = await res.json();
+          if (out && out.appId) {
+            window.__appId = out.appId;
+          }
+        } catch (e) {
+          // ignore, QR will show appId=0 if save fails
+        }
+
+        generateQR();
+        setTimeout(async () => {
+          const element = document.getElementById("certificate");
+          const prevBodyPadding = document.body.style.padding;
+          const prevBodyMargin = document.body.style.margin;
+          const prevBodyDisplay = document.body.style.display;
+          const prevBodyAlign = document.body.style.alignItems;
+          const prevElemMargin = element.style.margin;
+          const prevElemWidth = element.style.width;
+          const prevElemHeight = element.style.height;
+          document.body.style.padding = "0";
+          document.body.style.margin = "0";
+          document.body.style.display = "block";
+          document.body.style.alignItems = "flex-start";
+          element.style.margin = "0";
+          element.style.width = "210mm";
+          element.style.height = "297mm";
+          try {
+            const canvas = await html2canvas(element, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              backgroundColor: "#ffffff",
+              scrollX: 0,
+              scrollY: 0,
+              windowWidth: element.offsetWidth,
+              windowHeight: element.offsetHeight,
+            });
+            const imgData = canvas.toDataURL("image/jpeg", 0.98);
+            const { jsPDF } = window.jspdf || {};
+            const pdf = new jsPDF("p", "mm", "a4");
+            pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
+            pdf.save(
+              "Certificate_" +
+                document.getElementById("personName").innerText +
+                ".pdf",
+            );
+          } finally {
+            element.style.margin = prevElemMargin;
+            element.style.width = prevElemWidth;
+            element.style.height = prevElemHeight;
+            document.body.style.padding = prevBodyPadding;
+            document.body.style.margin = prevBodyMargin;
+            document.body.style.display = prevBodyDisplay;
+            document.body.style.alignItems = prevBodyAlign;
+          }
+        }, 500);
+      }
+
+      // Pehli baar page load hote hi QR bana de
+      window.onload = () => {
+        generateQR();
+        const certEl = document.getElementById("certNo");
+        if (certEl) syncFieldsFrom(certEl);
+      };
+    </script>
+  </body>
+</html>
