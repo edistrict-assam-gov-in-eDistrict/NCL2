@@ -568,43 +568,11 @@
       </div>
     </div>
 
+
 <script>
   function getText(id) {
     const el = document.getElementById(id);
     return el ? el.innerText.trim() : "";
-  }
-
-  // Save updated certificate date for both HTML pages.
-  function saveIssueDate(date) {
-    if (!date) return;
-
-    try {
-      localStorage.setItem("issueDate", date);
-    } catch (error) {
-      console.warn("Unable to save issue date:", error);
-    }
-  }
-
-  function collectData() {
-    const data = {
-      certNo: getText("certNo"),
-      appNo: getText("appNo"),
-      date: getText("issueDate"),
-      name: getText("personName"),
-      father: getText("fatherName"),
-      village: getText("village"),
-      district: getText("district"),
-      state: getText("state"),
-      community: getText("community"),
-      assamFamily: document.querySelector('[data-field="assamFamily"]')
-        ? document.querySelector('[data-field="assamFamily"]').innerText.trim()
-        : "",
-      cscName: getText("cscName"),
-      cscId: getText("cscId"),
-    };
-
-    saveIssueDate(data.date);
-    return data;
   }
 
   function applyData(data) {
@@ -624,57 +592,33 @@
       cscId: "cscId",
     };
 
-    Object.keys(idMap).forEach((key) => {
-      const val = data[key];
-      const el = document.getElementById(idMap[key]);
+    Object.entries(idMap).forEach(([key, id]) => {
+      const el = document.getElementById(id);
+      const value = data[key];
 
-      if (val != null && val !== "" && el) {
-        el.innerText = val;
+      if (el && value !== undefined && value !== null && value !== "") {
+        el.innerText = value;
       }
     });
 
-    if (data.date) {
-      saveIssueDate(data.date);
-    }
+    Object.entries(data).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === "") return;
 
-    Object.keys(data).forEach((key) => {
-      const val = data[key];
-      if (val == null || val === "") return;
-
-      document
-        .querySelectorAll(`[data-field="${key}"]`)
-        .forEach((el) => {
-          el.innerText = val;
-        });
+      document.querySelectorAll(`[data-field="${key}"]`).forEach((el) => {
+        el.innerText = value;
+      });
     });
 
     const certNo = data.certNo || "";
     const barcodeDigits = certNo.replace(/[^0-9]/g, "");
+    const barcodeValue = barcodeDigits || certNo;
     const barcodeEl = document.getElementById("certNoBarcode");
 
-    if (barcodeEl) {
-      barcodeEl.innerText = barcodeDigits || certNo;
-    }
+    if (barcodeEl) barcodeEl.innerText = barcodeValue;
 
-    renderBarcode(barcodeDigits || certNo);
+    renderBarcode(barcodeValue);
   }
-function syncIssueDates(date) {
-  if (!date) return;
 
-  ["issueDate", "signatureDate"].forEach((id) => {
-    const element = document.getElementById(id);
-
-    if (element && element.innerText.trim() !== date) {
-      element.innerText = date;
-    }
-  });
-
-  try {
-    localStorage.setItem("issueDate", date);
-  } catch (error) {
-    console.warn("Unable to save date:", error);
-  }
-}
   function renderBarcode(value) {
     const svg = document.getElementById("barcodeSvg");
 
@@ -705,148 +649,23 @@ function syncIssueDates(date) {
     });
   }
 
-  function syncFieldsFrom(el) {
-    const key = el.getAttribute("data-field");
-
-    if (key) {
-      const val = el.innerText;
-
-      document
-        .querySelectorAll(`[data-field="${key}"]`)
-        .forEach((node) => {
-          if (node !== el) node.innerText = val;
-        });
-    }
-
-    // Sync and save the issue date whenever it is edited.
-  if (el.id === "issueDate" || el.id === "signatureDate") {
-  syncIssueDates(el.innerText.trim());
-}
-
-    if (el.id === "certNo") {
-      const digits = el.innerText.replace(/[^0-9]/g, "");
-      const barcodeEl = document.getElementById("certNoBarcode");
-
-      if (barcodeEl) {
-        barcodeEl.innerText = digits || el.innerText.trim();
-      }
-
-      renderBarcode(digits || el.innerText.trim());
-    }
-  }
-
-  document.addEventListener("input", (e) => {
-    const el = e.target;
-
-    if (el && el.classList && el.classList.contains("editable")) {
-      syncFieldsFrom(el);
-    }
-  });
-
-  // On page load, use the shared saved date if available.
-  function restoreIssueDate() {
-    const dateEl = document.getElementById("issueDate");
-    if (!dateEl) return;
-
-    try {
-      const savedDate = localStorage.getItem("issueDate");
-
-      if (savedDate) {
-        dateEl.innerText = savedDate;
-      }
-    } catch (error) {
-      console.warn("Unable to restore issue date:", error);
-    }
-  }
-
-  async function savePDF() {
-    const data = collectData();
-
-    try {
-      const res = await fetch("../api/save.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const out = await res.json();
-
-      if (out && out.appId) {
-        window.__appId = out.appId;
-      }
-    } catch (e) {
-      // Continue PDF generation if saving fails.
-    }
-
-    generateQR();
-
-    setTimeout(async () => {
-      const element = document.getElementById("certificate");
-      if (!element) return;
-
-      const prevBodyPadding = document.body.style.padding;
-      const prevBodyMargin = document.body.style.margin;
-      const prevBodyDisplay = document.body.style.display;
-      const prevBodyAlign = document.body.style.alignItems;
-      const prevElemMargin = element.style.margin;
-      const prevElemWidth = element.style.width;
-      const prevElemHeight = element.style.height;
-
-      document.body.style.padding = "0";
-      document.body.style.margin = "0";
-      document.body.style.display = "block";
-      document.body.style.alignItems = "flex-start";
-
-      element.style.margin = "0";
-      element.style.width = "210mm";
-      element.style.height = "297mm";
-
-      try {
-        const canvas = await html2canvas(element, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: "#ffffff",
-          scrollX: 0,
-          scrollY: 0,
-          windowWidth: element.offsetWidth,
-          windowHeight: element.offsetHeight,
-        });
-
-        const imgData = canvas.toDataURL("image/jpeg", 0.98);
-        const { jsPDF } = window.jspdf || {};
-        const pdf = new jsPDF("p", "mm", "a4");
-
-        pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
-        pdf.save(
-          "Certificate_" +
-            getText("personName") +
-            ".pdf"
-        );
-      } finally {
-        element.style.margin = prevElemMargin;
-        element.style.width = prevElemWidth;
-        element.style.height = prevElemHeight;
-
-        document.body.style.padding = prevBodyPadding;
-        document.body.style.margin = prevBodyMargin;
-        document.body.style.display = prevBodyDisplay;
-        document.body.style.alignItems = prevBodyAlign;
-      }
-    }, 500);
-  }
-
   function showPDF() {
     const element = document.getElementById("certificate");
-    if (!element) return;
 
-    const prevBodyPadding = document.body.style.padding;
-    const prevBodyMargin = document.body.style.margin;
-    const prevBodyDisplay = document.body.style.display;
-    const prevBodyAlign = document.body.style.alignItems;
-    const prevElemMargin = element.style.margin;
-    const prevElemWidth = element.style.width;
-    const prevElemHeight = element.style.height;
+    if (!element || typeof html2canvas === "undefined") return;
+
+    const prevBody = {
+      padding: document.body.style.padding,
+      margin: document.body.style.margin,
+      display: document.body.style.display,
+      alignItems: document.body.style.alignItems,
+    };
+
+    const prevElement = {
+      margin: element.style.margin,
+      width: element.style.width,
+      height: element.style.height,
+    };
 
     document.body.style.padding = "0";
     document.body.style.margin = "0";
@@ -870,28 +689,32 @@ function syncIssueDates(date) {
       .then((canvas) => {
         const imgData = canvas.toDataURL("image/jpeg", 0.98);
         const { jsPDF } = window.jspdf || {};
-        const pdf = new jsPDF("p", "mm", "a4");
 
+        if (!jsPDF) throw new Error("jsPDF library is not loaded.");
+
+        const pdf = new jsPDF("p", "mm", "a4");
         pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
 
-        window.location.href = pdf.output("datauristring");
+        const dataUri = pdf.output("datauristring");
+        window.location.href = dataUri;
+      })
+      .catch((error) => {
+        console.error("PDF display failed:", error);
       })
       .finally(() => {
-        element.style.margin = prevElemMargin;
-        element.style.width = prevElemWidth;
-        element.style.height = prevElemHeight;
+        element.style.margin = prevElement.margin;
+        element.style.width = prevElement.width;
+        element.style.height = prevElement.height;
 
-        document.body.style.padding = prevBodyPadding;
-        document.body.style.margin = prevBodyMargin;
-        document.body.style.display = prevBodyDisplay;
-        document.body.style.alignItems = prevBodyAlign;
+        document.body.style.padding = prevBody.padding;
+        document.body.style.margin = prevBody.margin;
+        document.body.style.display = prevBody.display;
+        document.body.style.alignItems = prevBody.alignItems;
       });
   }
 
-  window.onload = () => {
+  function readDataFromUrl() {
     const params = new URLSearchParams(window.location.search);
-    const appId = params.get("appId");
-    const dataFromParams = {};
 
     const keyMap = {
       cn: "certNo",
@@ -908,35 +731,22 @@ function syncIssueDates(date) {
       cid: "cscId",
     };
 
-    Object.keys(keyMap).forEach((shortKey) => {
-      const val = params.get(shortKey);
-      if (val) dataFromParams[keyMap[shortKey]] = val;
-    });
+    return Object.fromEntries(
+      Object.entries(keyMap)
+        .map(([shortKey, key]) => [key, params.get(shortKey)])
+        .filter(([, value]) => value !== null)
+    );
+  }
 
-    if (Object.keys(dataFromParams).length) {
-      applyData(dataFromParams);
-      setTimeout(showPDF, 500);
-      generateQR();
-      return;
+  window.addEventListener("load", () => {
+    const data = readDataFromUrl();
+
+    if (Object.keys(data).length > 0) {
+      applyData(data);
     }
 
-    // Restore date on pages without date parameters.
-    restoreIssueDate();
     generateQR();
-
-    if (appId && appId !== "0") {
-      fetch(`../api/get.php?appId=${encodeURIComponent(appId)}`)
-        .then((r) => r.json())
-        .then((data) => {
-          applyData(data);
-          setTimeout(showPDF, 500);
-        })
-        .catch(() => {});
-    } else {
-      const certEl = document.getElementById("certNo");
-      if (certEl) syncFieldsFrom(certEl);
-    }
-  };
+  });
 </script>
 
   </body>
