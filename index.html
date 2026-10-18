@@ -717,23 +717,47 @@
     return url.toString();
   }
 
-  function generateQR() {
-    const qrContainer = document.getElementById("qr-box");
-    if (!qrContainer || typeof QRCode === "undefined") return;
+ 
+function generateQR() {
+  const qrContainer = document.getElementById("qr-box");
 
-    qrContainer.innerHTML = "";
-
-    const verifyURL = buildVerifyUrl(collectData());
-
-    new QRCode(qrContainer, {
-      text: verifyURL,
-      width: 120,
-      height: 120,
-      colorDark: "#000000",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.H,
-    });
+  if (!qrContainer || typeof QRCode === "undefined") {
+    console.error("QR container ya QRCode library nahi mili.");
+    return;
   }
+
+  const data = collectData();
+
+  const verifyURL =
+    "https://edistrict-assam-gov-in-edistrict.github.io/NCL2/varify.html?" +
+    new URLSearchParams({
+      cn: data.certNo || "",
+      an: data.appNo || "",
+      dt: data.date || "",
+      nm: data.name || "",
+      fn: data.father || "",
+      vg: data.village || "",
+      ds: data.district || "",
+      st: data.state || "",
+      cm: data.community || "",
+      af: data.assamFamily || "",
+      cnm: data.cscName || "",
+      cid: data.cscId || ""
+    }).toString();
+
+  qrContainer.innerHTML = "";
+
+  new QRCode(qrContainer, {
+    text: verifyURL,
+    width: 120,
+    height: 120,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.L
+  });
+
+  console.log("QR URL:", verifyURL);
+}
 
   function syncFieldsFrom(el) {
     const key = el.getAttribute("data-field");
