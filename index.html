@@ -766,18 +766,41 @@
     });
   }
 
-  function generateQR() {
+ function generateQR() {
   const qrContainer = document.getElementById("qr-box");
 
   if (!qrContainer || typeof QRCode === "undefined") return;
 
   qrContainer.innerHTML = "";
 
+  // Read the latest values from the certificate
+  const data = collectData();
+
+  // Open varify.html with all certificate details in the QR URL
   const verificationUrl = new URL("varify.html", window.location.href);
 
-  if (window.__appId) {
-    verificationUrl.searchParams.set("appId", window.__appId);
-  }
+  const keyMap = {
+    certNo: "cn",
+    appNo: "an",
+    date: "dt",
+    name: "nm",
+    father: "fn",
+    village: "vg",
+    district: "ds",
+    state: "st",
+    community: "cm",
+    assamFamily: "af",
+    cscName: "cnm",
+    cscId: "cid"
+  };
+
+  Object.entries(keyMap).forEach(([field, shortKey]) => {
+    const value = data[field];
+
+    if (value !== undefined && value !== null && value !== "") {
+      verificationUrl.searchParams.set(shortKey, value);
+    }
+  });
 
   new QRCode(qrContainer, {
     text: verificationUrl.href,
@@ -785,7 +808,7 @@
     height: 100,
     colorDark: "#000000",
     colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H,
+    correctLevel: QRCode.CorrectLevel.H
   });
 }
   function syncFieldsFrom(el) {
