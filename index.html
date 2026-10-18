@@ -766,17 +766,18 @@
     });
   }
 
- function generateQR() {
+
+function generateQR() {
   const qrContainer = document.getElementById("qr-box");
 
-  if (!qrContainer || typeof QRCode === "undefined") return;
+  if (!qrContainer || typeof QRCode === "undefined") {
+    console.error("QR container ya QRCode library nahi mili.");
+    return;
+  }
 
   qrContainer.innerHTML = "";
 
-  // Read the latest values from the certificate
   const data = collectData();
-
-  // Open varify.html with all certificate details in the QR URL
   const verificationUrl = new URL("varify.html", window.location.href);
 
   const keyMap = {
@@ -794,11 +795,10 @@
     cscId: "cid"
   };
 
-  Object.entries(keyMap).forEach(([field, shortKey]) => {
+  Object.entries(keyMap).forEach(([field, key]) => {
     const value = data[field];
-
     if (value !== undefined && value !== null && value !== "") {
-      verificationUrl.searchParams.set(shortKey, value);
+      verificationUrl.searchParams.set(key, value);
     }
   });
 
@@ -808,9 +808,10 @@
     height: 100,
     colorDark: "#000000",
     colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H
+    correctLevel: QRCode.CorrectLevel.L
   });
 }
+
   function syncFieldsFrom(el) {
     const key = el.getAttribute("data-field");
 
