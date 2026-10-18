@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -171,25 +171,13 @@
         margin-top: auto;
       }
 
-#qr-box {
-  width: 220px;
-  height: 220px;
-  min-width: 220px;
-  min-height: 220px;
-  background: #ffffff;
-  position: relative;
-  overflow: visible;
-}
-
-#qr-box canvas,
-#qr-box img {
-  display: block;
-  width: 220px !important;
-  height: 220px !important;
-  max-width: none !important;
-}
-
-     
+      #qr-box {
+        width: 120px;
+        height: 120px;
+        background-color: #ffffff;
+        position: relative;
+        overflow: hidden;
+      }
       .qr-cross {
         position: absolute;
         top: 0;
@@ -779,40 +767,53 @@
   }
 
 
+function generateQR() {
+  const qrContainer = document.getElementById("qr-box");
 
-   function generateQR() {
-        const data = collectData();
-        const verifyURL = buildVerifyUrl(data);
+  if (!qrContainer || typeof QRCode === "undefined") {
+    console.error("QR container ya QRCode library nahi mili.");
+    return;
+  }
 
-        const qrContainer = document.getElementById("qr-box");
-        qrContainer.innerHTML = "";
+  qrContainer.innerHTML = "";
 
-        new QRCode(qrContainer, {
-          text: verifyURL,
-          width: 160,
-          height: 160,
-          colorDark: "#000000",
-          colorLight: "#ffffff",
-          correctLevel: QRCode.CorrectLevel.L,
-        });
-      }
+  const data = collectData();
+ const verificationUrl = new URL(
+  "varify.html",
+  window.location.href.split("?")[0]
+);
 
-      function syncFieldsFrom(el) {
-        const key = el.getAttribute("data-field");
-        if (key) {
-          const val = el.innerText;
-          document.querySelectorAll(`[data-field="${key}"]`).forEach((node) => {
-            if (node !== el) node.innerText = val;
-          });
-        }
+  const keyMap = {
+    certNo: "cn",
+    appNo: "an",
+    date: "dt",
+    name: "nm",
+    father: "fn",
+    village: "vg",
+    district: "ds",
+    state: "st",
+    community: "cm",
+    assamFamily: "af",
+    cscName: "cnm",
+    cscId: "cid"
+  };
 
-        if (el.id === "certNo") {
-          const digits = el.innerText.replace(/[^0-9]/g, "");
-          const barcodeEl = document.getElementById("certNoBarcode");
-          if (barcodeEl) barcodeEl.innerText = digits || el.innerText.trim();
-          renderBarcode(digits || el.innerText.trim());
-        }
-      }
+  Object.entries(keyMap).forEach(([field, key]) => {
+    const value = data[field];
+    if (value !== undefined && value !== null && value !== "") {
+      verificationUrl.searchParams.set(key, value);
+    }
+  });
+
+  new QRCode(qrContainer, {
+    text: verificationUrl.href,
+    width: 100,
+    height: 100,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.L
+  });
+}
 
   function syncFieldsFrom(el) {
     const key = el.getAttribute("data-field");
