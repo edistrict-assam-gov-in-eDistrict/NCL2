@@ -171,13 +171,25 @@
         margin-top: auto;
       }
 
-      #qr-box {
-        width: 120px;
-        height: 120px;
-        background-color: #ffffff;
-        position: relative;
-        overflow: hidden;
-      }
+#qr-box {
+  width: 220px;
+  height: 220px;
+  min-width: 220px;
+  min-height: 220px;
+  background: #ffffff;
+  position: relative;
+  overflow: visible;
+}
+
+#qr-box canvas,
+#qr-box img {
+  display: block;
+  width: 220px !important;
+  height: 220px !important;
+  max-width: none !important;
+}
+
+     
       .qr-cross {
         position: absolute;
         top: 0;
@@ -767,21 +779,22 @@
   }
 
 
+
 function generateQR() {
   const qrContainer = document.getElementById("qr-box");
 
   if (!qrContainer || typeof QRCode === "undefined") {
-    console.error("QR container ya QRCode library nahi mili.");
+    console.error("QR container or QRCode library not found.");
     return;
   }
 
   qrContainer.innerHTML = "";
 
   const data = collectData();
- const verificationUrl = new URL(
-  "varify.html",
-  window.location.href.split("?")[0]
-);
+  const verificationUrl = new URL(
+    "varify.html",
+    window.location.href.split("?")[0].split("#")[0]
+  );
 
   const keyMap = {
     certNo: "cn",
@@ -800,19 +813,41 @@ function generateQR() {
 
   Object.entries(keyMap).forEach(([field, key]) => {
     const value = data[field];
-    if (value !== undefined && value !== null && value !== "") {
-      verificationUrl.searchParams.set(key, value);
+
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      verificationUrl.searchParams.set(key, String(value).trim());
     }
   });
 
+  const qrUrl = verificationUrl.href;
+  console.log("QR URL:", qrUrl);
+  console.log("QR URL length:", qrUrl.length);
+
   new QRCode(qrContainer, {
-    text: verificationUrl.href,
-    width: 100,
-    height: 100,
+    text: qrUrl,
+    width: 220,
+    height: 220,
     colorDark: "#000000",
     colorLight: "#ffffff",
     correctLevel: QRCode.CorrectLevel.L
   });
+
+  setTimeout(() => {
+    const qrCanvas = qrContainer.querySelector("canvas");
+    const qrImage = qrContainer.querySelector("img");
+
+    if (qrCanvas) {
+      qrCanvas.style.width = "220px";
+      qrCanvas.style.height = "220px";
+      qrCanvas.style.display = "block";
+    }
+
+    if (qrImage) {
+      qrImage.style.width = "220px";
+      qrImage.style.height = "220px";
+      qrImage.style.display = "block";
+    }
+  }, 100);
 }
 
   function syncFieldsFrom(el) {
