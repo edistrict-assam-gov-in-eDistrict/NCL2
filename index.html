@@ -780,75 +780,39 @@
 
 
 
-function generateQR() {
-  const qrContainer = document.getElementById("qr-box");
+   function generateQR() {
+        const data = collectData();
+        const verifyURL = buildVerifyUrl(data);
 
-  if (!qrContainer || typeof QRCode === "undefined") {
-    console.error("QR container or QRCode library not found.");
-    return;
-  }
+        const qrContainer = document.getElementById("qr-box");
+        qrContainer.innerHTML = "";
 
-  qrContainer.innerHTML = "";
+        new QRCode(qrContainer, {
+          text: verifyURL,
+          width: 160,
+          height: 160,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.L,
+        });
+      }
 
-  const data = collectData();
-  const verificationUrl = new URL(
-    "varify.html",
-    window.location.href.split("?")[0].split("#")[0]
-  );
+      function syncFieldsFrom(el) {
+        const key = el.getAttribute("data-field");
+        if (key) {
+          const val = el.innerText;
+          document.querySelectorAll(`[data-field="${key}"]`).forEach((node) => {
+            if (node !== el) node.innerText = val;
+          });
+        }
 
-  const keyMap = {
-    certNo: "cn",
-    appNo: "an",
-    date: "dt",
-    name: "nm",
-    father: "fn",
-    village: "vg",
-    district: "ds",
-    state: "st",
-    community: "cm",
-    assamFamily: "af",
-    cscName: "cnm",
-    cscId: "cid"
-  };
-
-  Object.entries(keyMap).forEach(([field, key]) => {
-    const value = data[field];
-
-    if (value !== undefined && value !== null && String(value).trim() !== "") {
-      verificationUrl.searchParams.set(key, String(value).trim());
-    }
-  });
-
-  const qrUrl = verificationUrl.href;
-  console.log("QR URL:", qrUrl);
-  console.log("QR URL length:", qrUrl.length);
-
-  new QRCode(qrContainer, {
-    text: qrUrl,
-    width: 220,
-    height: 220,
-    colorDark: "#000000",
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.L
-  });
-
-  setTimeout(() => {
-    const qrCanvas = qrContainer.querySelector("canvas");
-    const qrImage = qrContainer.querySelector("img");
-
-    if (qrCanvas) {
-      qrCanvas.style.width = "220px";
-      qrCanvas.style.height = "220px";
-      qrCanvas.style.display = "block";
-    }
-
-    if (qrImage) {
-      qrImage.style.width = "220px";
-      qrImage.style.height = "220px";
-      qrImage.style.display = "block";
-    }
-  }, 100);
-}
+        if (el.id === "certNo") {
+          const digits = el.innerText.replace(/[^0-9]/g, "");
+          const barcodeEl = document.getElementById("certNoBarcode");
+          if (barcodeEl) barcodeEl.innerText = digits || el.innerText.trim();
+          renderBarcode(digits || el.innerText.trim());
+        }
+      }
 
   function syncFieldsFrom(el) {
     const key = el.getAttribute("data-field");
