@@ -767,21 +767,27 @@
   }
 
   function generateQR() {
-    const qrContainer = document.getElementById("qr-box");
-    if (!qrContainer || typeof QRCode === "undefined") return;
+  const qrContainer = document.getElementById("qr-box");
 
-    qrContainer.innerHTML = "";
+  if (!qrContainer || typeof QRCode === "undefined") return;
 
-    new QRCode(qrContainer, {
-      text: window.location.href,
-      width: 100,
-      height: 100,
-      colorDark: "#000000",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.H,
-    });
+  qrContainer.innerHTML = "";
+
+  const verificationUrl = new URL("varify.html", window.location.href);
+
+  if (window.__appId) {
+    verificationUrl.searchParams.set("appId", window.__appId);
   }
 
+  new QRCode(qrContainer, {
+    text: verificationUrl.href,
+    width: 100,
+    height: 100,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H,
+  });
+}
   function syncFieldsFrom(el) {
     const key = el.getAttribute("data-field");
 
