@@ -346,9 +346,7 @@
           </div>
           <div>
             তাৰিখ / Date:
-            <span class="editable" id="issueDate" contenteditable="true"
-              >19-12-2025</span
-            >
+           <span class="editable" id="issueDate" contenteditable="true">19-12-2025</span>
           </div>
         </div>
       </div>
@@ -579,10 +577,8 @@
                   <span class="editable" contenteditable="true"
                     >MADHURIMA DHING</span
                   ><br />
-                  Date:
-                   <span class="editable" id="issueDate" contenteditable="true"
-              >19-12-2025</span
-            >
+                 Date:
+<span class="editable" id="signatureDate" contenteditable="true">19-12-2025</span><br />
                   Reason: eDistrict<br />
                   Location: Assam
                 </div>
@@ -800,9 +796,9 @@
     }
 
     // Sync and save the issue date whenever it is edited.
-    if (el.id === "issueDate") {
-      saveIssueDate(el.innerText.trim());
-    }
+  if (el.id === "issueDate" || el.id === "signatureDate") {
+  syncIssueDates(el.innerText.trim());
+}
 
     if (el.id === "certNo") {
       const digits = el.innerText.replace(/[^0-9]/g, "");
@@ -916,7 +912,22 @@
       }
     }, 500);
   }
+function syncIssueDates(date) {
+  if (!date) return;
 
+  ["issueDate", "signatureDate"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el && el.innerText.trim() !== date) {
+      el.innerText = date;
+    }
+  });
+
+  try {
+    localStorage.setItem("issueDate", date);
+  } catch (error) {
+    console.warn("Unable to save date:", error);
+  }
+}
   function showPDF() {
     const element = document.getElementById("certificate");
     if (!element) return;
