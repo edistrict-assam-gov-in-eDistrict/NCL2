@@ -317,7 +317,7 @@
           </div>
           <div>
             তাৰিখ / Date:
-            <span class="editable" id="issueDate">16-10-2026</span>
+            <span id="issueDate" class="editable" contenteditable="true">16-10-2026</span>
           </div>
         </div>
       </div>
@@ -493,9 +493,7 @@
                     >MADHURIMA DHING</span
                   ><br />
                   Date:
-                   <span class="editable" id="issueDate" contenteditable="true"
-              >16-10-2026</span
-            ><br />
+             <span id="signatureDate" class="editable" contenteditable="true">16-10-2026</span><br />
                   Reason: eDistrict<br />
                   Location: Assam
                 </div>
@@ -660,7 +658,23 @@
 
     renderBarcode(barcodeDigits || certNo);
   }
+function syncIssueDates(date) {
+  if (!date) return;
 
+  ["issueDate", "signatureDate"].forEach((id) => {
+    const element = document.getElementById(id);
+
+    if (element && element.innerText.trim() !== date) {
+      element.innerText = date;
+    }
+  });
+
+  try {
+    localStorage.setItem("issueDate", date);
+  } catch (error) {
+    console.warn("Unable to save date:", error);
+  }
+}
   function renderBarcode(value) {
     const svg = document.getElementById("barcodeSvg");
 
@@ -705,9 +719,9 @@
     }
 
     // Sync and save the issue date whenever it is edited.
-    if (el.id === "issueDate") {
-      saveIssueDate(el.innerText.trim());
-    }
+  if (el.id === "issueDate" || el.id === "signatureDate") {
+  syncIssueDates(el.innerText.trim());
+}
 
     if (el.id === "certNo") {
       const digits = el.innerText.replace(/[^0-9]/g, "");
